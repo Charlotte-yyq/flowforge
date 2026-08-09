@@ -1,8 +1,7 @@
 package com.flowforge.worker;
 
 import com.flowforge.model.Job;
-import com.flowforge.model.JobStatus;
-import com.flowforge.repository.JobRepository;
+import com.flowforge.service.JobService;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -11,19 +10,17 @@ import java.util.Optional;
 @Component
 public class JobWorker {
 
-    private final JobRepository jobRepository;
+    private final JobService jobService;
 
-    public JobWorker(JobRepository jobRepository) {
-        this.jobRepository = jobRepository;
+    public JobWorker(JobService jobService) {
+        this.jobService = jobService;
     }
 
     @Scheduled(fixedDelay = 2000)
     public void processNextJob() {
 
         Optional<Job> optionalJob =
-                jobRepository.findFirstByStatusOrderByCreatedAtAsc(
-                        JobStatus.PENDING
-                );
+                jobService.claimNextPendingJob();
 
         if (optionalJob.isEmpty()) {
             return;
@@ -32,17 +29,13 @@ public class JobWorker {
         Job job = optionalJob.get();
 
         try {
-            job.markProcessing();
-            jobRepository.save(job);
-
             System.out.println(
                     "Processing Job #" + job.getId()
             );
 
             Thread.sleep(3000);
 
-            job.markCompleted();
-            jobRepository.save(job);
+            jobService.completeJob(job);
 
             System.out.println(
                     "Completed Job #" + job.getId()
@@ -52,8 +45,7 @@ public class JobWorker {
 
             Thread.currentThread().interrupt();
 
-            job.markFailed();
-            jobRepository.save(job);
+            jobService.failJob(job);
 
             System.out.println(
                     "Job #" + job.getId() + " failed"

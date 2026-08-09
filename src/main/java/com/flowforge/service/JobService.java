@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class JobService {
@@ -32,5 +33,33 @@ public class JobService {
 
     public Optional<Job> getJob(Long id) {
         return jobRepository.findById(id);
+    }
+
+    @Transactional
+    public Optional<Job> claimNextPendingJob() {
+
+        Optional<Job> optionalJob =
+                jobRepository.findNextPendingJobForUpdate();
+
+        if (optionalJob.isPresent()) {
+            Job job = optionalJob.get();
+
+            job.markProcessing();
+            jobRepository.save(job);
+        }
+
+        return optionalJob;
+    }
+
+    @Transactional
+    public void completeJob(Job job) {
+        job.markCompleted();
+        jobRepository.save(job);
+    }
+
+    @Transactional
+    public void failJob(Job job) {
+        job.markFailed();
+        jobRepository.save(job);
     }
 }
