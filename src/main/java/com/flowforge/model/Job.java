@@ -1,34 +1,52 @@
 package com.flowforge.model;
 
-import java.time.Instant;
+import jakarta.persistence.*;
 
+        import java.time.Instant;
+
+@Entity
+@Table(name = "jobs")
 public class Job {
-    private long id;
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
     private String type;
-    private String payload; //stats that job needs
+
+    private String payload;
+
+    @Enumerated(EnumType.STRING)
     private JobStatus status;
+
     private Instant createdAt;
 
-    public Job(long id, String type, String payload, JobStatus status, Instant createdAt) {
-        this.id = id;
+    protected Job() {
+    }
+
+    public Job(String type, String payload, JobStatus status, Instant createdAt) {
         this.type = type;
         this.payload = payload;
         this.status = status;
         this.createdAt = createdAt;
     }
 
-    public long getId() {
+    public Long getId() {
         return id;
     }
+
     public String getType() {
         return type;
     }
+
     public String getPayload() {
         return payload;
     }
+
     public JobStatus getStatus() {
         return status;
     }
+
     public Instant getCreatedAt() {
         return createdAt;
     }

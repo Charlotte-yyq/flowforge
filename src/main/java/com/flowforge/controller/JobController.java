@@ -22,7 +22,7 @@ public class JobController {
         return ResponseEntity.status(HttpStatus.CREATED).body(job);
     }
 
-    @GetMapping("/(id)")
+    @GetMapping("/{id}")
     public ResponseEntity<Job> getJob(@PathVariable long id) {
         return jobService.getJob(id).map(ResponseEntity::ok).
                 orElseGet(() -> ResponseEntity.notFound().build());
