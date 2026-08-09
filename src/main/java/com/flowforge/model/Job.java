@@ -50,4 +50,16 @@ public class Job {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public void markProcessing(){
+        this.status = JobStatus.PROCESSING;
+    }
+
+    public void markCompleted(){
+        this.status = JobStatus.COMPLETED;
+    }
+
+    public void markFailed(){
+        this.status = JobStatus.FAILED;
+    }
 }
