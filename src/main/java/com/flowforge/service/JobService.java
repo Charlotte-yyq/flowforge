@@ -45,6 +45,8 @@ public class JobService {
             Job job = optionalJob.get();
 
             job.markProcessing();
+            job.incrementAttemptCount();
+
             jobRepository.save(job);
         }
 
@@ -61,5 +63,28 @@ public class JobService {
     public void failJob(Job job) {
         job.markFailed();
         jobRepository.save(job);
+    }
+
+    @Transactional
+    public boolean retryOrFailJob(Job job) {
+
+        if (job.getAttemptCount() <= job.getMaxRetries()) {
+
+            long delaySeconds =
+                    (long) Math.pow(2, job.getAttemptCount());
+
+            Instant nextAttemptAt =
+                    Instant.now().plusSeconds(delaySeconds);
+
+            job.scheduleRetry(nextAttemptAt);
+            jobRepository.save(job);
+
+            return true;
+        }
+
+        job.markFailed();
+        jobRepository.save(job);
+
+        return false;
     }
 }

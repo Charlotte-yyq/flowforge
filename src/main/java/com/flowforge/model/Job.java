@@ -2,7 +2,7 @@ package com.flowforge.model;
 
 import jakarta.persistence.*;
 
-        import java.time.Instant;
+import java.time.Instant;
 
 @Entity
 @Table(name = "jobs")
@@ -20,6 +20,12 @@ public class Job {
     private JobStatus status;
 
     private Instant createdAt;
+
+    private Integer attemptCount = 0;
+
+    private Integer maxRetries = 3;
+
+    private Instant nextAttemptAt;
 
     protected Job() {
     }
@@ -51,8 +57,13 @@ public class Job {
         return createdAt;
     }
 
-    public void markProcessing(){
+    public void markProcessing() {
         this.status = JobStatus.PROCESSING;
+        this.nextAttemptAt = null;
+    }
+
+    public void markPending() {
+        this.status = JobStatus.PENDING;
     }
 
     public void markCompleted(){
@@ -61,5 +72,30 @@ public class Job {
 
     public void markFailed(){
         this.status = JobStatus.FAILED;
+    }
+
+    public Integer getAttemptCount() {
+        return attemptCount;
+    }
+
+    public Integer getMaxRetries() {
+        return maxRetries;
+    }
+
+    public void incrementAttemptCount() {
+        if (attemptCount == null) {
+            attemptCount = 0;
+        }
+
+        attemptCount++;
+    }
+
+    public Instant getNextAttemptAt() {
+        return nextAttemptAt;
+    }
+
+    public void scheduleRetry(Instant nextAttemptAt) {
+        this.status = JobStatus.PENDING;
+        this.nextAttemptAt = nextAttemptAt;
     }
 }

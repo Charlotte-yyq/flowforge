@@ -10,13 +10,17 @@ public interface JobRepository extends JpaRepository<Job, Long> {
 
     @Query(
             value = """
-                    SELECT *
-                    FROM jobs
-                    WHERE status = 'PENDING'
-                    ORDER BY created_at
-                    FOR UPDATE SKIP LOCKED
-                    LIMIT 1
-                    """,
+                SELECT *
+                FROM jobs
+                WHERE status = 'PENDING'
+                  AND (
+                      next_attempt_at IS NULL
+                      OR next_attempt_at <= CURRENT_TIMESTAMP
+                  )
+                ORDER BY created_at
+                FOR UPDATE SKIP LOCKED
+                LIMIT 1
+                """,
             nativeQuery = true
     )
     Optional<Job> findNextPendingJobForUpdate();

@@ -31,7 +31,16 @@ public class JobWorker {
         try {
             System.out.println(
                     "Processing Job #" + job.getId()
+                    + " - attempt " + job.getAttemptCount()
             );
+
+            if ("RETRY_TEST".equals(job.getType())
+                && job.getAttemptCount() < 3) {
+
+                throw new RuntimeException(
+                        "Simulated temporary failure"
+                );
+            }
 
             Thread.sleep(3000);
 
@@ -48,8 +57,26 @@ public class JobWorker {
             jobService.failJob(job);
 
             System.out.println(
-                    "Job #" + job.getId() + " failed"
+                    "Job #" + job.getId() + " interrupted"
             );
+
+        } catch (RuntimeException e) {
+
+            boolean willRetry =
+                    jobService.retryOrFailJob(job);
+
+            if (willRetry) {
+                System.out.println(
+                        "Job #" + job.getId()
+                        + " failed - retry scheduled at "
+                        + job.getNextAttemptAt()
+                );
+            } else {
+                System.out.println(
+                        "Job #" + job.getId()
+                        + " permanently failed"
+                );
+            }
         }
     }
 }
