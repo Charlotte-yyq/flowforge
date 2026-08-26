@@ -60,13 +60,13 @@ public class JobService {
     }
 
     @Transactional
-    public void failJob(Job job) {
-        job.markFailed();
+    public void failJob(Job job, String errorMessage) {
+        job.markFailed(errorMessage);
         jobRepository.save(job);
     }
 
     @Transactional
-    public boolean retryOrFailJob(Job job) {
+    public boolean retryOrFailJob(Job job, String errorMessage) {
 
         if (job.getAttemptCount() <= job.getMaxRetries()) {
 
@@ -76,13 +76,13 @@ public class JobService {
             Instant nextAttemptAt =
                     Instant.now().plusSeconds(delaySeconds);
 
-            job.scheduleRetry(nextAttemptAt);
+            job.scheduleRetry(nextAttemptAt, errorMessage);
             jobRepository.save(job);
 
             return true;
         }
 
-        job.markFailed();
+        job.markFailed(errorMessage);
         jobRepository.save(job);
 
         return false;

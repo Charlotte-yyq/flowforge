@@ -27,6 +27,8 @@ public class Job {
 
     private Instant nextAttemptAt;
 
+    private String lastError;
+
     protected Job() {
     }
 
@@ -70,8 +72,10 @@ public class Job {
         this.status = JobStatus.COMPLETED;
     }
 
-    public void markFailed(){
+    public void markFailed(String errorMessage) {
+
         this.status = JobStatus.FAILED;
+        this.lastError = errorMessage;
     }
 
     public Integer getAttemptCount() {
@@ -94,8 +98,13 @@ public class Job {
         return nextAttemptAt;
     }
 
-    public void scheduleRetry(Instant nextAttemptAt) {
+    public String getLastError() {
+        return lastError;
+    }
+
+    public void scheduleRetry(Instant nextAttemptAt, String errorMessage) {
         this.status = JobStatus.PENDING;
         this.nextAttemptAt = nextAttemptAt;
+        this.lastError = errorMessage;
     }
 }
