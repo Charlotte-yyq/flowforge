@@ -33,6 +33,8 @@ public class Job {
 
     private Instant heartbeatAt;
 
+    private Instant deadLetterAt;
+
     @Column(unique = true) //no duplicate tasks
     private String idempotencyKey;
     public String getIdempotencyKey() {
@@ -131,11 +133,32 @@ public class Job {
         return heartbeatAt;
     }
 
+    public Instant getDeadLetterAt() {
+        return deadLetterAt;
+    }
+
     public void scheduleRetry(Instant nextAttemptAt, String errorMessage) {
         this.status = JobStatus.PENDING;
         this.nextAttemptAt = nextAttemptAt;
         this.lastError = errorMessage;
         this.processingStartedAt = null;
         this.heartbeatAt = null;
+    }
+
+    public void markDeadLetter(String errorMessage) {
+        this.status = JobStatus.DEAD_LETTER;
+        this.lastError = errorMessage;
+        this.processingStartedAt = null;
+        this.heartbeatAt = null;
+        this.deadLetterAt = Instant.now();
+    }
+
+    public void retryFromDeadLetter(){
+        this.status = JobStatus.PENDING;
+        this.attemptCount = 0;
+        this.nextAttemptAt = null;
+        this.processingStartedAt = null;
+        this.heartbeatAt = null;
+        this.deadLetterAt = null;
     }
 }

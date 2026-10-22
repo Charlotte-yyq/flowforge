@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.flowforge.dto.CreateJobResult;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/jobs")
 public class JobController {
@@ -31,5 +33,25 @@ public class JobController {
     public ResponseEntity<Job> getJob(@PathVariable long id) {
         return jobService.getJob(id).map(ResponseEntity::ok).
                 orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/dead-letter")
+    public ResponseEntity<List<Job>> getDeadLetterJobs() {
+
+        List<Job> jobs =
+                jobService.getDeadLetterJobs();
+
+        return ResponseEntity.ok(jobs);
+    }
+
+    @PostMapping("/{id}/retry")
+    public ResponseEntity<Job> retryDeadLetterJob(
+            @PathVariable Long id
+    ) {
+        return jobService.retryDeadLetterJob(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(
+                        () -> ResponseEntity.notFound().build()
+                );
     }
 }

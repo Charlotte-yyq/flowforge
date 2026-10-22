@@ -96,7 +96,7 @@ public class JobService {
             return true;
         }
 
-        job.markFailed(errorMessage);
+        job.markDeadLetter(errorMessage);
         jobRepository.save(job);
 
         return false;
@@ -110,7 +110,7 @@ public class JobService {
             if (job.getAttemptCount() <= job.getMaxRetries()) {
                 job.scheduleRetry(Instant.now(), "Recovered after worker timeout");
             }else{
-                job.markFailed("Worker timeout and retry limit was exceeded");
+                job.markDeadLetter("Worker timeout and retry limit was exceeded");
             }
         }
         jobRepository.saveAll(staleJobs);
@@ -125,5 +125,22 @@ public class JobService {
         if (job.getStatus() != JobStatus.PROCESSING){return;}
         job.markHeartbeat();
         jobRepository.save(job);
+    }
+
+    public List<Job> getDeadLetterJobs() {
+        return jobRepository.findByStatusOrderByDeadLetterAtDesc(
+                JobStatus.DEAD_LETTER
+        );
+    }
+
+    @Transactional
+    public Optional<Job> retryDeadLetterJob(Long id){
+        Optional<Job> optionalJob = jobRepository.findById(id);
+        if (optionalJob.isEmpty()) {return Optional.empty();}
+        Job job = optionalJob.get();
+        if (job.getStatus() != JobStatus.DEAD_LETTER){return Optional.empty();}
+        job.retryFromDeadLetter();
+        jobRepository.save(job);
+        return Optional.of(job);
     }
 }

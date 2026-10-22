@@ -1,6 +1,7 @@
 package com.flowforge.repository;
 
 import com.flowforge.model.Job;
+import com.flowforge.model.JobStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -28,6 +29,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
     )
     Optional<Job> findNextPendingJobForUpdate();
     Optional<Job> findByIdempotencyKey(String idempotencyKey);
+    List<Job> findByStatusOrderByDeadLetterAtDesc(JobStatus status);
 
     @Query(
             value = """
