@@ -10,10 +10,14 @@ import java.time.Instant;
 import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 public class JobService {
 
     private final JobRepository jobRepository;
+
+    private static final long STALE_JOB_TIMEOUT_SECONDS = 10;
 
     public JobService(JobRepository jobRepository) {
         this.jobRepository = jobRepository;
@@ -86,5 +90,20 @@ public class JobService {
         jobRepository.save(job);
 
         return false;
+    }
+
+    @Transactional
+    public int recoverStaleJobs(){
+        Instant cutoff = Instant.now().minusSeconds(STALE_JOB_TIMEOUT_SECONDS);
+        List<Job> staleJobs = jobRepository.findStaleProcessingJobsForUpdate(cutoff);
+        for (Job job : staleJobs) {
+            if (job.getAttemptCount() <= job.getMaxRetries()) {
+                job.scheduleRetry(Instant.now(), "Recovered after worker timeout");
+            }else{
+                job.markFailed("Worker timeout and retry limit was exceeded");
+            }
+        }
+        jobRepository.saveAll(staleJobs);
+        return staleJobs.size();
     }
 }

@@ -49,7 +49,11 @@ public class JobWorker {
                 );
             }
 
-            Thread.sleep(3000);
+            if ("LONG_RUNNING".equals(job.getType())) {
+                Thread.sleep(30000);
+            } else {
+                Thread.sleep(3000);
+            }
 
             jobService.completeJob(job);
 
