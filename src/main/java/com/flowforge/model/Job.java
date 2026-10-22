@@ -33,14 +33,21 @@ public class Job {
 
     private Instant heartbeatAt;
 
+    @Column(unique = true) //no duplicate tasks
+    private String idempotencyKey;
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
     protected Job() {
     }
 
-    public Job(String type, String payload, JobStatus status, Instant createdAt) {
+    public Job(String type, String payload, String idempotencyKey) {
         this.type = type;
         this.payload = payload;
-        this.status = status;
-        this.createdAt = createdAt;
+        this.idempotencyKey = idempotencyKey;
+        this.status = JobStatus.PENDING;
+        this.createdAt = Instant.now();
     }
 
     public Long getId() {

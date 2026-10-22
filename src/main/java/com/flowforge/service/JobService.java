@@ -4,7 +4,9 @@ import com.flowforge.dto.CreateJobRequest;
 import com.flowforge.model.Job;
 import com.flowforge.model.JobStatus;
 import com.flowforge.repository.JobRepository;
+import com.flowforge.dto.CreateJobResult;
 import org.springframework.stereotype.Service;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -23,16 +25,24 @@ public class JobService {
         this.jobRepository = jobRepository;
     }
 
-    public Job createJob(CreateJobRequest request) {
+    public CreateJobResult createJob(CreateJobRequest request) {
 
+        Optional<Job> existingJob = jobRepository.findByIdempotencyKey(request.idempotencyKey());
+        if (existingJob.isPresent()) {return new CreateJobResult(existingJob.get(), false);}
         Job job = new Job(
                 request.type(),
                 request.payload(),
-                JobStatus.PENDING,
-                Instant.now()
+                request.idempotencyKey()
         );
+        try{
+            Job savedJob = jobRepository.saveAndFlush(job);
+            return new CreateJobResult(savedJob, true);
+        } catch (DataIntegrityViolationException e) {
+            Job existingConcurrentJob = jobRepository.findByIdempotencyKey(request.idempotencyKey())
+                    .orElseThrow(() -> e);
+            return new CreateJobResult(existingConcurrentJob, false);
+        }
 
-        return jobRepository.save(job);
     }
 
     public Optional<Job> getJob(Long id) {

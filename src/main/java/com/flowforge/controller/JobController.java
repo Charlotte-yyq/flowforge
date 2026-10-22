@@ -6,6 +6,7 @@ import com.flowforge.service.JobService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import com.flowforge.dto.CreateJobResult;
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -18,8 +19,12 @@ public class JobController {
 
     @PostMapping
     public ResponseEntity<Job> createJob(@RequestBody CreateJobRequest request) {
-        Job job = jobService.createJob(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(job);
+        CreateJobResult result = jobService.createJob(request);
+        if (result.created()){
+            return ResponseEntity.status(HttpStatus.CREATED).body(result.job());
+        }
+
+        return ResponseEntity.ok(result.job());
     }
 
     @GetMapping("/{id}")

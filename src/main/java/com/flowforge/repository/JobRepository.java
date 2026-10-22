@@ -27,6 +27,7 @@ public interface JobRepository extends JpaRepository<Job, Long> {
             nativeQuery = true
     )
     Optional<Job> findNextPendingJobForUpdate();
+    Optional<Job> findByIdempotencyKey(String idempotencyKey);
 
     @Query(
             value = """
