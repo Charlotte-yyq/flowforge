@@ -50,7 +50,18 @@ public class JobWorker {
             }
 
             if ("LONG_RUNNING".equals(job.getType())) {
-                Thread.sleep(30000);
+
+                for (int i = 0; i < 6; i++) {
+
+                    Thread.sleep(5000);
+
+                    jobService.refreshHeartbeat(job.getId());
+
+                    System.out.println(
+                            "Heartbeat Job #" + job.getId()
+                    );
+                }
+
             } else {
                 Thread.sleep(3000);
             }

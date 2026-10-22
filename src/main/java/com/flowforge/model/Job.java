@@ -31,6 +31,8 @@ public class Job {
 
     private Instant processingStartedAt;
 
+    private Instant heartbeatAt;
+
     protected Job() {
     }
 
@@ -64,8 +66,13 @@ public class Job {
     public void markProcessing() {
         this.status = JobStatus.PROCESSING;
         this.nextAttemptAt = null;
+        Instant now = Instant.now();
+        this.processingStartedAt = now;
+        this.heartbeatAt = now;
         this.processingStartedAt = Instant.now();
     }
+
+    public void markHeartbeat() {this.heartbeatAt = Instant.now();}
 
     public void markPending() {
         this.status = JobStatus.PENDING;
@@ -74,6 +81,7 @@ public class Job {
     public void markCompleted(){
         this.status = JobStatus.COMPLETED;
         this.processingStartedAt = null;
+        this.heartbeatAt = null;
     }
 
     public void markFailed(String errorMessage) {
@@ -81,6 +89,7 @@ public class Job {
         this.status = JobStatus.FAILED;
         this.lastError = errorMessage;
         this.processingStartedAt = null;
+        this.heartbeatAt = null;
     }
 
     public Integer getAttemptCount() {
@@ -111,10 +120,15 @@ public class Job {
         return processingStartedAt;
     }
 
+    public Instant getHeartbeatAt() {
+        return heartbeatAt;
+    }
+
     public void scheduleRetry(Instant nextAttemptAt, String errorMessage) {
         this.status = JobStatus.PENDING;
         this.nextAttemptAt = nextAttemptAt;
         this.lastError = errorMessage;
         this.processingStartedAt = null;
+        this.heartbeatAt = null;
     }
 }

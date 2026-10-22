@@ -33,8 +33,8 @@ public interface JobRepository extends JpaRepository<Job, Long> {
                 SELECT *
                 FROM jobs
                 WHERE status = 'PROCESSING'
-                  AND processing_started_at < :cutoff
-                ORDER BY processing_started_at
+                  AND heartbeat_at < :cutoff
+                ORDER BY heartbeat_at
                 FOR UPDATE SKIP LOCKED
                 """,
             nativeQuery = true

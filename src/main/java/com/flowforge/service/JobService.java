@@ -106,4 +106,14 @@ public class JobService {
         jobRepository.saveAll(staleJobs);
         return staleJobs.size();
     }
+
+    @Transactional
+    public void refreshHeartbeat(Long jobId) {
+        Optional<Job> optionalJob = jobRepository.findById(jobId);
+        if (optionalJob.isEmpty()) {return;}
+        Job job = optionalJob.get();
+        if (job.getStatus() != JobStatus.PROCESSING){return;}
+        job.markHeartbeat();
+        jobRepository.save(job);
+    }
 }
